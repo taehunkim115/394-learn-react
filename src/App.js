@@ -9,69 +9,6 @@ import { makeStyles, AppBar, Toolbar, Typography, IconButton, MenuItem, Menu, Gr
 
 const sizes = ['S','M','L','XL'];
 
-const staticcart = {
-  "12064273040195392": {
-    "sku": 12064273040195392,
-    "title": "Cat Tee Black T-Shirt",
-    "description": "4 MSL",
-    "style": "Black with custom print",
-    "price": 10.9,
-    "currencyId": "USD",
-    "currencyFormat": "$",
-    "isFreeShipping": true,
-    "quantity": 1,
-    "size": "M"
-  },
-  "51498472915966370": {
-    "sku": 51498472915966370,
-    "title": "Dark Thug Blue-Navy T-Shirt",
-    "description": "",
-    "style": "Front print and paisley print",
-    "price": 29.45,
-    "currencyId": "USD",
-    "currencyFormat": "$",
-    "isFreeShipping": true,
-    "quantity": 1,
-    "size": "M"
-  },
-  "10686354557628304": {
-    "sku": 10686354557628304,
-    "title": "Sphynx Tie Dye Wine T-Shirt",
-    "description": "GPX Poly 1",
-    "style": "Front tie dye print",
-    "price": 9,
-    "currencyId": "USD",
-    "currencyFormat": "$",
-    "isFreeShipping": true,
-    "quantity": 1,
-    "size": "M"
-  },
-  "11033926921508488": {
-    "sku": 11033926921508488,
-    "title": "Skuul",
-    "description": "Training 2014",
-    "style": "Black T-Shirt with front print",
-    "price": 14,
-    "currencyId": "USD",
-    "currencyFormat": "$",
-    "isFreeShipping": true,
-    "quantity": 1,
-    "size": "M"
-  },
-  "39876704341265610": {
-    "sku": 39876704341265610,
-    "title": "Wine Skul T-Shirt",
-    "description": "",
-    "style": "Wine",
-    "price": 13.25,
-    "currencyId": "USD",
-    "currencyFormat": "$",
-    "isFreeShipping": true,
-    "quantity": 1,
-    "size": "M"
-  },
-};
-
 const useStyles = makeStyles(theme => ({
   root: {
     flexGrow: 1
@@ -182,8 +119,23 @@ const Banner = (cart_data, setCart_data) => {
   );
 };
 
-const ProductCard = ({ products }) => {
+const ProductCard = ({ products, cart_data, setCart_data }) => {
   const classes = useStylescart();
+  const [remove, setRemove] = useState(false);
+
+  const handleRemove = () => {
+    console.log("removing")
+    if (products.quantity === 1) {
+      console.log(cart_data)
+      const newcart = cart_data.cart_data.filter(r => r.id + r.size !== products.id + products.size);
+      console.log(newcart)
+      cart_data.setCart_data(newcart);
+    }
+    else {
+      products.quantity--
+      setRemove(!remove)
+    }
+  }
 
   const caption = (
     <React.Fragment>
@@ -207,7 +159,7 @@ const ProductCard = ({ products }) => {
       subtitle={caption}
       actionIcon={
         <IconButton color='inherit'>
-          <DeleteIcon />
+          <DeleteIcon onClick = {handleRemove}/>
         </IconButton>
         }
     />
@@ -222,7 +174,7 @@ const CartList = ({ cart_data, setCart_data }) => {
     return (
       <React.Fragment className={classes.root}>
           <GridList className={classes.gridList}>
-            { cart_data.cart_data.map(products => <ProductCard key = { products.sku } products = { products }/>)}
+            { cart_data.cart_data.map(products => <ProductCard key = { products.sku } products = { products } cart_data={cart_data} setCart_data={setCart_data}/>)}
           </GridList>
       </React.Fragment>
     );
