@@ -6,113 +6,24 @@ import ShoppingCart from '@material-ui/icons/ShoppingCart';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Button2 from '@material-ui/core/Button';
 import { makeStyles, AppBar, Toolbar, Typography, IconButton, MenuItem, Menu, GridList, GridListTile, GridListTileBar } from '@material-ui/core';
+import firebase from 'firebase/app';
+import 'firebase/database';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBvQSe8lJBVqGDx5Uwcb6xQiQKoX7B84Ho",
+  authDomain: "learn-react-22d7b.firebaseapp.com",
+  databaseURL: "https://learn-react-22d7b.firebaseio.com",
+  projectId: "learn-react-22d7b",
+  storageBucket: "learn-react-22d7b.appspot.com",
+  messagingSenderId: "233798744459",
+  appId: "1:233798744459:web:0d3bc32a4226ab91e3978e"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database().ref();
 
 const sizes = ['S','M','L','XL'];
-
-const inventory = {
-  "12064273040195392": {
-    "S": 0,
-    "M": 3,
-    "L": 1,
-    "XL": 2
-  },
-  "51498472915966370": {
-    "S": 0,
-    "M": 2,
-    "L": 3,
-    "XL": 2
-  },
-  "10686354557628304": {
-    "S": 1,
-    "M": 2,
-    "L": 2,
-    "XL": 1
-  },
-  "11033926921508488": {
-    "S": 3,
-    "M": 2,
-    "L": 0,
-    "XL": 1
-  },
-  "39876704341265610": {
-    "S": 2,
-    "M": 0,
-    "L": 0,
-    "XL": 0
-  },
-  "10412368723880252": {
-    "S": 3,
-    "M": 2,
-    "L": 2,
-    "XL": 2
-  },
-  "8552515751438644": {
-    "S": 2,
-    "M": 0,
-    "L": 0,
-    "XL": 2
-  },
-  "18644119330491310": {
-    "S": 3,
-    "M": 3,
-    "L": 2,
-    "XL": 0
-  },
-  "11854078013954528": {
-    "S": 1,
-    "M": 1,
-    "L": 1,
-    "XL": 0
-  },
-  "876661122392077": {
-    "S": 3,
-    "M": 1,
-    "L": 0,
-    "XL": 1
-  },
-  "9197907543445676": {
-    "S": 3,
-    "M": 3,
-    "L": 1,
-    "XL": 2
-  },
-  "10547961582846888": {
-    "S": 2,
-    "M": 2,
-    "L": 0,
-    "XL": 0
-  },
-  "6090484789343891": {
-    "S": 2,
-    "M": 0,
-    "L": 2,
-    "XL": 3
-  },
-  "18532669286405344": {
-    "S": 2,
-    "M": 3,
-    "L": 0,
-    "XL": 2
-  },
-  "5619496040738316": {
-    "S": 1,
-    "M": 3,
-    "L": 3,
-    "XL": 2
-  },
-  "11600983276356164": {
-    "S": 3,
-    "M": 3,
-    "L": 3,
-    "XL": 1
-  },
-  "27250082398145996": {
-    "S": 1,
-    "M": 0,
-    "L": 0,
-    "XL": 2
-  }
-}
 
 const useStyles = makeStyles(theme => ({
   root: {
@@ -416,15 +327,18 @@ const buttonColor = selected => (
 
 const SizeButtons = ({size, setSize, inven, setInven, products}) => {
   let id = products.sku
-  let temp = inven[id]
   let realsize = []
 
-  for (var i = 0; i < 4; i++) {
-    if (temp[sizes[i]] > 0) {
-      realsize.push(sizes[i])
-    }
+  if (inven !== undefined)
+  {
+    let temp = inven[id]
+    for (var i = 0; i < 4; i++) {
+      if (temp[sizes[i]] > 0) {
+        realsize.push(sizes[i])
+      }
+    } 
   }
-
+  
   if (realsize.length > 0) {
     return (
       <Button.Group align = "centered">
@@ -456,7 +370,18 @@ const App = () => {
   const [selected, setSelected] = useState([]);
   const products = Object.values(data);
   const [cart_data, setCart_data] = useState([]);
-  const [inven, setInven] = useState(inventory);
+  const [inven, setInven] = useState();
+
+  
+  useEffect(() => {
+    const handleData = snap => {
+      if (snap.val()) setInven(snap.val());
+    }
+    db.on('value', handleData, error => alert(error));
+    return () => {
+      db.off('value', handleData);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchProducts = async () => {
