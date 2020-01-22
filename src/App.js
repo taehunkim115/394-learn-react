@@ -9,6 +9,111 @@ import { makeStyles, AppBar, Toolbar, Typography, IconButton, MenuItem, Menu, Gr
 
 const sizes = ['S','M','L','XL'];
 
+const inventory = {
+  "12064273040195392": {
+    "S": 0,
+    "M": 3,
+    "L": 1,
+    "XL": 2
+  },
+  "51498472915966370": {
+    "S": 0,
+    "M": 2,
+    "L": 3,
+    "XL": 2
+  },
+  "10686354557628304": {
+    "S": 1,
+    "M": 2,
+    "L": 2,
+    "XL": 1
+  },
+  "11033926921508488": {
+    "S": 3,
+    "M": 2,
+    "L": 0,
+    "XL": 1
+  },
+  "39876704341265610": {
+    "S": 2,
+    "M": 0,
+    "L": 0,
+    "XL": 0
+  },
+  "10412368723880252": {
+    "S": 3,
+    "M": 2,
+    "L": 2,
+    "XL": 2
+  },
+  "8552515751438644": {
+    "S": 2,
+    "M": 0,
+    "L": 0,
+    "XL": 2
+  },
+  "18644119330491310": {
+    "S": 3,
+    "M": 3,
+    "L": 2,
+    "XL": 0
+  },
+  "11854078013954528": {
+    "S": 1,
+    "M": 1,
+    "L": 1,
+    "XL": 0
+  },
+  "876661122392077": {
+    "S": 3,
+    "M": 1,
+    "L": 0,
+    "XL": 1
+  },
+  "9197907543445676": {
+    "S": 3,
+    "M": 3,
+    "L": 1,
+    "XL": 2
+  },
+  "10547961582846888": {
+    "S": 2,
+    "M": 2,
+    "L": 0,
+    "XL": 0
+  },
+  "6090484789343891": {
+    "S": 2,
+    "M": 0,
+    "L": 2,
+    "XL": 3
+  },
+  "18532669286405344": {
+    "S": 2,
+    "M": 3,
+    "L": 0,
+    "XL": 2
+  },
+  "5619496040738316": {
+    "S": 1,
+    "M": 3,
+    "L": 3,
+    "XL": 2
+  },
+  "11600983276356164": {
+    "S": 3,
+    "M": 3,
+    "L": 3,
+    "XL": 1
+  },
+  "27250082398145996": {
+    "S": 1,
+    "M": 0,
+    "L": 0,
+    "XL": 2
+  }
+}
+
 const useStyles = makeStyles(theme => ({
   root: {
     flexGrow: 1
@@ -204,7 +309,7 @@ const TotalPrice = ({cart_data}) => {
   )
 }
 
-const Product = ({ key, products, cart_data, setCart_data }) => {
+const Product = ({ key, products, cart_data, setCart_data, inven, setInven }) => {
   const [size, setSize] = useState();
   
   let cartproduct = {
@@ -275,7 +380,7 @@ const Product = ({ key, products, cart_data, setCart_data }) => {
         <Card.Footer>
           <Column size = 'full'>
             <Notification>
-              <SizeButtons state = { { size, setSize } }/>
+              <SizeButtons size={size} setSize={setSize} inven={inven} setInven={setInven} products={products}/>
             </Notification>
               <Column.Group gapless>
                 <Card.Footer.Item>
@@ -293,12 +398,13 @@ const Product = ({ key, products, cart_data, setCart_data }) => {
   );
 };
 
-const ProductList = ({ products, cart_data, setCart_data }) => {
+const ProductList = ({ products, cart_data, setCart_data, inven, setInven }) => {
 
 return (
     <React.Fragment>
       <Column.Group multiline>
-        { products.map(products => <Product key = { products.sku } products = { products } cart_data = {cart_data} setCart_data = {setCart_data}/>)}
+        { products.map(products => <Product key = { products.sku } products = { products } cart_data = {cart_data} setCart_data = {setCart_data}
+          inven={inven} setInven={setInven}/>)}
       </Column.Group>
     </React.Fragment>
   );
@@ -308,29 +414,49 @@ const buttonColor = selected => (
   selected ? `button is-success is-selected` : 'button'
 );
 
-const SizeButtons = ({state}) => {
+const SizeButtons = ({size, setSize, inven, setInven, products}) => {
+  let id = products.sku
+  let temp = inven[id]
+  let realsize = []
 
-  return (
-    <Button.Group align = "centered">
-    { Object.values(sizes)
-      .map(value =>
-        <Button rounded key = { value } 
-        className={ buttonColor(value === state.size) }
-        onClick={ () => state.setSize(value) }
-        >
-            { value }
-        </Button>
-      )
+  for (var i = 0; i < 4; i++) {
+    if (temp[sizes[i]] > 0) {
+      realsize.push(sizes[i])
     }
-  </Button.Group>
-  );
+  }
+
+  if (realsize.length > 0) {
+    return (
+      <Button.Group align = "centered">
+      { Object.values(realsize)
+        .map(value =>
+          <Button rounded key = { value } 
+          className={ buttonColor(value === size) }
+          onClick={ () => setSize(value) }
+          >
+              { value }
+          </Button>
+        )
+      }
+    </Button.Group>
+    );
+  }
+  else {
+    return (
+      <React.Fragment>
+        Out of Stock
+      </React.Fragment>
+    )
+  }
 };
+
 
 const App = () => {
   const [data, setData] = useState({});
   const [selected, setSelected] = useState([]);
   const products = Object.values(data);
   const [cart_data, setCart_data] = useState([]);
+  const [inven, setInven] = useState(inventory);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -348,7 +474,7 @@ const App = () => {
       </Container>
       <br/>
       <Container>
-        <ProductList products={ products } cart_data = {cart_data} setCart_data = {setCart_data} />
+        <ProductList products={ products } cart_data = {cart_data} setCart_data = {setCart_data} inven={inven} setInven={setInven}/>
       </Container>
     </React.Fragment>
   );
