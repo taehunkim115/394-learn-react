@@ -69,13 +69,140 @@ const useStylesgrid = makeStyles(theme => ({
     }
 }));
 
-const Banner = (cart_data, setCart_data) => {
+const inventory = {
+  "12064273040195392": {
+    "S": 0,
+    "M": 3,
+    "L": 1,
+    "XL": 2
+  },
+  "51498472915966370": {
+    "S": 0,
+    "M": 2,
+    "L": 3,
+    "XL": 2
+  },
+  "10686354557628304": {
+    "S": 1,
+    "M": 2,
+    "L": 2,
+    "XL": 1
+  },
+  "11033926921508488": {
+    "S": 3,
+    "M": 2,
+    "L": 0,
+    "XL": 1
+  },
+  "39876704341265610": {
+    "S": 2,
+    "M": 0,
+    "L": 0,
+    "XL": 0
+  },
+  "10412368723880252": {
+    "S": 3,
+    "M": 2,
+    "L": 2,
+    "XL": 2
+  },
+  "8552515751438644": {
+    "S": 2,
+    "M": 0,
+    "L": 0,
+    "XL": 2
+  },
+  "18644119330491310": {
+    "S": 3,
+    "M": 3,
+    "L": 2,
+    "XL": 0
+  },
+  "11854078013954528": {
+    "S": 1,
+    "M": 1,
+    "L": 1,
+    "XL": 0
+  },
+  "876661122392077": {
+    "S": 3,
+    "M": 1,
+    "L": 0,
+    "XL": 1
+  },
+  "9197907543445676": {
+    "S": 3,
+    "M": 3,
+    "L": 1,
+    "XL": 2
+  },
+  "10547961582846888": {
+    "S": 2,
+    "M": 2,
+    "L": 0,
+    "XL": 0
+  },
+  "6090484789343891": {
+    "S": 2,
+    "M": 0,
+    "L": 2,
+    "XL": 3
+  },
+  "18532669286405344": {
+    "S": 2,
+    "M": 3,
+    "L": 0,
+    "XL": 2
+  },
+  "5619496040738316": {
+    "S": 1,
+    "M": 3,
+    "L": 3,
+    "XL": 2
+  },
+  "11600983276356164": {
+    "S": 3,
+    "M": 3,
+    "L": 3,
+    "XL": 1
+  },
+  "27250082398145996": {
+    "S": 1,
+    "M": 0,
+    "L": 0,
+    "XL": 2
+  }
+}
+
+const CheckOutButton = (cart_data) => {
+  
+  const handleCheckOut = () => {
+
+    var updates = {};
+
+    for (var i = 0; i < cart_data.cart_data.cart_data.length; i++)
+    {
+      updates["/"+cart_data.cart_data.cart_data[i].id+"/"+cart_data.cart_data.cart_data[i].size] = cart_data.cart_data.inven[cart_data.cart_data.cart_data[i].id][cart_data.cart_data.cart_data[i].size] - cart_data.cart_data.cart_data[i].quantity
+    }
+
+    cart_data.cart_data.setCart_data([]);
+
+    return firebase.database().ref().update(updates);
+  };
+
+  return(
+    <Button2 size="large" onClick={handleCheckOut}>Check Out</Button2>
+  )
+}
+
+const Banner = (cart_data, setCart_data, inven, setInven) => {
   const classes = useStyles();
   const [cart, setCart] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const [user, setUser] = useState(null);
-  
+  const [checkout, setCheckout] = useState(true);
+
   const handleMenu = event => {
     setAnchorEl(event.currentTarget);
   };
@@ -83,6 +210,10 @@ const Banner = (cart_data, setCart_data) => {
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  const handleCheckOutstate = () => {
+    setCheckout(false);
+  }
 
   useEffect(() => {
     firebase.auth().onAuthStateChanged(setUser);
@@ -94,6 +225,9 @@ const Banner = (cart_data, setCart_data) => {
         <Toolbar>
           <Typography variant="h6" className={classes.title}>
             Shopping
+          </Typography>
+          <Typography hidden={checkout} variant="h6" className={classes.title}>
+            Successfully Checked Out!
           </Typography>
           <React.Fragment>
             { user ?<Welcome user={user}/>: <SignIn/> }
@@ -132,6 +266,9 @@ const Banner = (cart_data, setCart_data) => {
                 </MenuItem>
                 <MenuItem>
                 <TotalPrice cart_data={cart_data}/>
+                </MenuItem>
+                <MenuItem onClick={() => {handleClose(); handleCheckOutstate();}}>
+                  <CheckOutButton cart_data={cart_data}/>
                 </MenuItem>
                 <MenuItem onClick={handleClose}>Close Cart</MenuItem>
               </Menu>
@@ -176,9 +313,7 @@ const ProductCard = ({ products, cart_data, setCart_data }) => {
   const handleRemove = () => {
     console.log("removing")
     if (products.quantity === 1) {
-      console.log(cart_data)
       const newcart = cart_data.cart_data.filter(r => r.id + r.size !== products.id + products.size);
-      console.log(newcart)
       cart_data.setCart_data(newcart);
     }
     else {
@@ -256,7 +391,7 @@ const TotalPrice = ({cart_data}) => {
 
 const Product = ({ key, products, cart_data, setCart_data, inven, setInven }) => {
   const [size, setSize] = useState();
-  
+
   let cartproduct = {
     id: products.sku,
     name: products.title,
@@ -283,7 +418,6 @@ const Product = ({ key, products, cart_data, setCart_data, inven, setInven }) =>
       let found = false
       for (var i = 0; i < cart_data.length; i++)
       {
-        console.log(cart_data[i].id)
         if (cart_data[i].id === cartproduct.id && cart_data[i].size === size) {
           found = true;
           break;
@@ -406,7 +540,6 @@ const App = () => {
   const [cart_data, setCart_data] = useState([]);
   const [inven, setInven] = useState();
 
-  
   useEffect(() => {
     const handleData = snap => {
       if (snap.val()) setInven(snap.val());
@@ -429,7 +562,7 @@ const App = () => {
   return (
     <React.Fragment>
       <Container>
-        <Banner cart_data = {cart_data} setCart_data = {setCart_data}/>
+        <Banner cart_data = {cart_data} setCart_data = {setCart_data} inven = {inven} setInven = {setInven}/>
       </Container>
       <br/>
       <Container>
