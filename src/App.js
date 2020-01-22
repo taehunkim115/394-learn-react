@@ -8,6 +8,8 @@ import Button2 from '@material-ui/core/Button';
 import { makeStyles, AppBar, Toolbar, Typography, IconButton, MenuItem, Menu, GridList, GridListTile, GridListTileBar } from '@material-ui/core';
 import firebase from 'firebase/app';
 import 'firebase/database';
+import 'firebase/auth';
+import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBvQSe8lJBVqGDx5Uwcb6xQiQKoX7B84Ho",
@@ -72,6 +74,7 @@ const Banner = (cart_data, setCart_data) => {
   const [cart, setCart] = useState(true);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const [user, setUser] = useState(null);
   
   const handleMenu = event => {
     setAnchorEl(event.currentTarget);
@@ -81,6 +84,10 @@ const Banner = (cart_data, setCart_data) => {
     setAnchorEl(null);
   };
 
+  useEffect(() => {
+    firebase.auth().onAuthStateChanged(setUser);
+  }, []);
+
   return(
     <React.Fragment className={classes.root}>
       <AppBar position="static" color="secondary">
@@ -88,8 +95,9 @@ const Banner = (cart_data, setCart_data) => {
           <Typography variant="h6" className={classes.title}>
             Shopping
           </Typography>
-          <Button2 color="inherit">Sign up</Button2>
-          <Button2 color="inherit">Log in</Button2>
+          <React.Fragment>
+            { user ?<Welcome user={user}/>: <SignIn/> }
+          </React.Fragment>
           {cart && (
             <React.Fragment>
               <IconButton
@@ -134,6 +142,32 @@ const Banner = (cart_data, setCart_data) => {
     </React.Fragment>
   );
 };
+
+const uiConfig = {
+  signInFlow: 'popup',
+  signInOptions: [
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID
+  ],
+  callbacks: {
+    signInSuccessWithAuthResult: () => false
+  }
+};
+
+const Welcome = ({ user }) => (
+  <div>
+      Welcome, {user.displayName}
+      <Button2 className="logout" color="inherit" onClick={() => firebase.auth().signOut()}>
+        Log Out
+      </Button2>
+  </div>
+);
+
+const SignIn = () => (
+    <StyledFirebaseAuth
+      uiConfig={uiConfig}
+      firebaseAuth={firebase.auth()}
+    />
+)
 
 const ProductCard = ({ products, cart_data, setCart_data }) => {
   const classes = useStylescart();
